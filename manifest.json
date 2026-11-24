@@ -1,0 +1,66 @@
+{
+  "manifest_version": 3,
+  "name": "SMIS Pro – Nhập nhận xét hàng loạt",
+  "version": "1.0.0",
+  "description": "Tiện ích hỗ trợ giáo viên tiểu học tự động nhập nhận xét định kỳ (in học bạ) và nhận xét tháng (3 mục) trên hệ thống SMIS (Thông tư 27/2020/TT-BGDĐT)",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SMIS Pro – Nhập nhận xét hàng loạt",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://*.moet.gov.vn/*",
+    "*://*.moet.edu.vn/*",
+    "*://*.csdl.edu.vn/*",
+    "*://*.csdl.moet.gov.vn/*",
+    "*://smis.moet.edu.vn/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.moet.gov.vn/*",
+        "*://*.moet.edu.vn/*",
+        "*://*.csdl.edu.vn/*",
+        "*://*.csdl.moet.gov.vn/*",
+        "*://smis.moet.edu.vn/*",
+        "<all_urls>"
+      ],
+      "js": [
+        "utils/matcher.js",
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "templates/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

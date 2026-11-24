@@ -1,0 +1,15 @@
+# OS metadata
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+~$*.xlsx
+~$*.xls
+
+# Node / Editor
+node_modules/
+.vscode/
+.idea/

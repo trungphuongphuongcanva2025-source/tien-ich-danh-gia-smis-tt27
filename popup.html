@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMIS Pro – Tự động hóa đánh giá Thông tư 27</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <img src="icons/icon48.png" alt="Logo" class="app-logo">
+        <div>
+          <h1 class="app-title">SMIS Pro</h1>
+          <p class="app-subtitle">Tự động hóa đánh giá học sinh (3.4.1 • 3.4.2 • 3.4.3)</p>
+        </div>
+      </div>
+      <div id="connectionStatus" class="status-badge checking">
+        <span class="status-dot"></span>
+        <span class="status-text">Đang kiểm tra...</span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs (3.4.1, 3.4.2, 3.4.3, Trợ giúp) -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-341">
+        <span class="tab-icon">📚</span>
+        <span>3.4.1 Môn học</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-342">
+        <span class="tab-icon">🌟</span>
+        <span>3.4.2 NL & PC</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-343">
+        <span class="tab-icon">📜</span>
+        <span>3.4.3 Học bạ</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-help">
+        <span class="tab-icon">💡</span>
+        <span>Kho mẫu & HD</span>
+      </button>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="tab-content-wrapper">
+
+      <!-- ================= TAB 1: MỤC 3.4.1 KẾT QUẢ MÔN HỌC & HĐGD ================= -->
+      <section id="tab-341" class="tab-pane active">
+        <div class="card">
+          <div class="card-header">
+            <h3>1. Nạp file Excel 3.4.1 (Xuất từ SMIS)</h3>
+            <span class="badge-hint">Hỗ trợ file mẫu định kỳ</span>
+          </div>
+          
+          <div class="upload-zone" id="dropZone341">
+            <input type="file" id="fileInput341" accept=".xlsx, .xls, .csv" class="file-input">
+            <div class="upload-icon">📂</div>
+            <p class="upload-prompt">Nhấn để chọn file hoặc kéo thả file vào đây</p>
+            <p class="upload-hint">Ví dụ: <code>filemau_danhgia_dinhkyc1_tt27_2020_2a_GK1.xlsx</code></p>
+            <div id="fileInfo341" class="file-info hidden">
+              <span class="file-name" id="fileName341"></span>
+              <button id="btnRemoveFile341" class="btn-remove">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sheet Selector & Grade Controls -->
+        <div id="controlsCard341" class="card hidden">
+          <div class="card-header">
+            <h3>2. Chọn môn học & Khối lớp</h3>
+          </div>
+          <div class="config-row">
+            <div class="form-group flex-1">
+              <label for="selSheet341">Môn học (Sheet):</label>
+              <select id="selSheet341" class="form-control font-bold color-teal"></select>
+            </div>
+            <div class="form-group" style="max-width: 110px;">
+              <label for="selGrade341">Khối lớp:</label>
+              <select id="selGrade341" class="form-control font-bold">
+                <option value="1">Khối 1</option>
+                <option value="2" selected>Khối 2</option>
+                <option value="3">Khối 3</option>
+                <option value="4">Khối 4</option>
+                <option value="5">Khối 5</option>
+              </select>
+            </div>
+            <div class="form-group" style="max-width: 100px;">
+              <label for="selTerm341">Đợt:</label>
+              <select id="selTerm341" class="form-control">
+                <option value="GK1" selected>GK1</option>
+                <option value="CK1">CK1</option>
+                <option value="GK2">GK2</option>
+                <option value="CK2">CK2</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="config-row" style="margin-top: 6px; padding: 6px 10px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div class="form-group flex-1">
+              <label for="selCodeMode341" style="font-size: 11px; font-weight: 600; color: #475569;">Cột "Mã nhận xét":</label>
+              <select id="selCodeMode341" class="form-control" style="font-size: 12px; height: 30px;">
+                <option value="none" selected>⚪ Để trống (Chuẩn SMIS - Đã có Nội dung thì không bắt buộc)</option>
+                <option value="rate_num">🔢 Tự gán mã theo Mức (T01, T02... / H01, H02...)</option>
+                <option value="num">🔢 Tự gán số thứ tự (01, 02, 03...)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Quick assign bar -->
+          <div class="quick-assign-banner">
+            <div class="quick-assign-title">
+              <span>⚡ Gán nhanh mức & Tự sinh nhận xét YCCĐ:</span>
+            </div>
+            <div class="quick-buttons-row">
+              <button type="button" id="btnSetAll341T" class="btn-pill">⭐ Tất cả Tốt (T)</button>
+              <button type="button" id="btnSetAll341H" class="btn-pill">✔ Tất cả H.Thành (H / Đ)</button>
+              <button type="button" id="btnAutoGenerate341" class="btn btn-warning-action">
+                ⚡ TỰ ĐỘNG SINH NHẬN XÉT
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Box 3.4.1 -->
+        <div id="previewCard341" class="card hidden">
+          <div class="card-header">
+            <h3>3. Danh sách học sinh (<span id="previewCount341">0</span> em)</h3>
+          </div>
+          <div class="table-preview-container">
+            <table class="preview-table" id="previewTable341">
+              <thead>
+                <tr>
+                  <th style="width: 30px; text-align: center;">STT</th>
+                  <th style="width: 110px;">Họ và tên</th>
+                  <th style="width: 55px; text-align: center;">Mức</th>
+                  <th style="width: 45px; text-align: center;">Điểm</th>
+                  <th style="width: 55px; text-align: center;">Mã NX</th>
+                  <th>Nội dung nhận xét (Chuẩn TT27)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Action Section 3.4.1 -->
+        <div id="actionSection341" class="action-section-grid hidden">
+          <button id="btnStart341" class="btn btn-primary flex-1">
+            🚀 ĐIỀN TỰ ĐỘNG VÀO TRANG 3.4.1
+          </button>
+          <button id="btnExportExcel341" class="btn btn-success" title="Xuất file Excel đã điền để bấm nút 'Nhập Excel' trên SMIS">
+            💾 XUẤT EXCEL (NHẬP SMIS)
+          </button>
+          <button id="btnStop341" class="btn btn-danger hidden flex-1">
+            ⛔ DỪNG LẠI
+          </button>
+        </div>
+
+        <!-- Progress Box 3.4.1 -->
+        <div id="progressBox341" class="card progress-card hidden">
+          <div class="progress-header">
+            <span id="progressText341">Đang chuẩn bị...</span>
+            <span id="progressPercent341" class="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progressBar341" class="progress-bar-fill" style="width: 0%"></div>
+          </div>
+          <div id="progressLog341" class="progress-log"></div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: MỤC 3.4.2 KẾT QUẢ NĂNG LỰC VÀ PHẨM CHẤT ================= -->
+      <section id="tab-342" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>1. Nạp file Excel 3.4.2 (Xuất từ SMIS)</h3>
+            <span class="badge-hint">Năng lực & Phẩm chất</span>
+          </div>
+          
+          <div class="upload-zone" id="dropZone342">
+            <input type="file" id="fileInput342" accept=".xlsx, .xls, .csv" class="file-input">
+            <div class="upload-icon">📂</div>
+            <p class="upload-prompt">Nhấn để chọn file hoặc kéo thả file vào đây</p>
+            <p class="upload-hint">Ví dụ: <code>danhgia_nlpc_data_2a_GK1.xlsx</code></p>
+            <div id="fileInfo342" class="file-info hidden">
+              <span class="file-name" id="fileName342"></span>
+              <button id="btnRemoveFile342" class="btn-remove">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls 3.4.2 -->
+        <div id="controlsCard342" class="card hidden">
+          <div class="card-header">
+            <h3>2. Tùy chọn khối lớp & Gán mức nhanh</h3>
+          </div>
+          <div class="config-row">
+            <div class="form-group flex-1">
+              <label for="selGrade342">Khối lớp:</label>
+              <select id="selGrade342" class="form-control font-bold color-teal">
+                <option value="1">Khối 1</option>
+                <option value="2" selected>Khối 2</option>
+                <option value="3">Khối 3</option>
+                <option value="4">Khối 4</option>
+                <option value="5">Khối 5</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="selDefaultRate342">Mức đánh giá chung:</label>
+              <select id="selDefaultRate342" class="form-control font-bold">
+                <option value="T" selected>Tốt (T)</option>
+                <option value="Đ">Đạt (Đ / H)</option>
+                <option value="C">Cần cố gắng (C)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="quick-assign-banner">
+            <div class="quick-assign-title">
+              <span>⚡ Sinh 3 nội dung nhận xét (NL Chung, NL Đặc thù, Phẩm chất):</span>
+            </div>
+            <div class="quick-buttons-row">
+              <button type="button" id="btnSetAll342T" class="btn-pill">⭐ Đặt tất cả Tốt (T)</button>
+              <button type="button" id="btnSetAll342D" class="btn-pill">✔ Đặt tất cả Đạt (Đ)</button>
+              <button type="button" id="btnAutoGenerate342" class="btn btn-warning-action">
+                ⚡ TỰ ĐỘNG SINH 3 NỘI DUNG NHẬN XÉT
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Box 3.4.2 -->
+        <div id="previewCard342" class="card hidden">
+          <div class="card-header">
+            <h3>3. Danh sách học sinh (<span id="previewCount342">0</span> em)</h3>
+          </div>
+          <div class="table-preview-container">
+            <table class="preview-table" id="previewTable342">
+              <thead>
+                <tr>
+                  <th style="width: 30px; text-align: center;">STT</th>
+                  <th style="width: 105px;">Họ và tên</th>
+                  <th style="width: 55px; text-align: center;">Mức</th>
+                  <th>Nhận xét Năng lực chung</th>
+                  <th>Nhận xét Năng lực đặc thù</th>
+                  <th>Nhận xét Phẩm chất</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Action Section 3.4.2 -->
+        <div id="actionSection342" class="action-section-grid hidden">
+          <button id="btnStart342" class="btn btn-primary flex-1">
+            🚀 ĐIỀN TỰ ĐỘNG VÀO TRANG 3.4.2
+          </button>
+          <button id="btnExportExcel342" class="btn btn-success" title="Xuất file Excel đã điền đủ 15 tiêu chí và 3 nội dung để nhập vào SMIS">
+            💾 XUẤT EXCEL (NHẬP SMIS)
+          </button>
+          <button id="btnStop342" class="btn btn-danger hidden flex-1">
+            ⛔ DỪNG LẠI
+          </button>
+        </div>
+
+        <!-- Progress Box 3.4.2 -->
+        <div id="progressBox342" class="card progress-card hidden">
+          <div class="progress-header">
+            <span id="progressText342">Đang chuẩn bị...</span>
+            <span id="progressPercent342" class="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progressBar342" class="progress-bar-fill" style="width: 0%"></div>
+          </div>
+          <div id="progressLog342" class="progress-log"></div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: MỤC 3.4.3 NHẬP NHẬN XÉT IN HỌC BẠ ================= -->
+      <section id="tab-343" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>1. Nạp danh sách lớp (Mục 3.4.3)</h3>
+            <button id="btnUseLoadedList343" class="btn-link" title="Dùng danh sách học sinh đã nạp ở mục 3.4.1/3.4.2">🔄 Dùng danh sách đã có</button>
+          </div>
+          
+          <div class="upload-zone" id="dropZone343">
+            <input type="file" id="fileInput343" accept=".xlsx, .xls, .csv" class="file-input">
+            <div class="upload-icon">📂</div>
+            <p class="upload-prompt">Nhấn để chọn file Excel danh sách lớp 3.4.3</p>
+            <p class="upload-hint">Hoặc bấm nút <em>"Dùng danh sách đã có"</em> ở trên nếu đã tải ở 3.4.1/3.4.2</p>
+            <div id="fileInfo343" class="file-info hidden">
+              <span class="file-name" id="fileName343"></span>
+              <button id="btnRemoveFile343" class="btn-remove">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls 3.4.3 -->
+        <div id="controlsCard343" class="card hidden">
+          <div class="card-header">
+            <h3>2. Khối lớp & Tự sinh nhận xét học bạ GVCN</h3>
+          </div>
+          <div class="config-row">
+            <div class="form-group flex-1">
+              <label for="selGrade343">Khối lớp:</label>
+              <select id="selGrade343" class="form-control font-bold color-teal">
+                <option value="1">Khối 1</option>
+                <option value="2" selected>Khối 2</option>
+                <option value="3">Khối 3</option>
+                <option value="4">Khối 4</option>
+                <option value="5">Khối 5</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="selDefaultRate343">Mức đánh giá chung:</label>
+              <select id="selDefaultRate343" class="form-control font-bold">
+                <option value="T" selected>Tốt (T)</option>
+                <option value="H">Hoàn thành (H / Đ)</option>
+                <option value="C">Cần cố gắng (C)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="quick-assign-banner">
+            <div class="quick-assign-title">
+              <span>⚡ Sinh nhận xét in học bạ GVCN theo mức đạt được:</span>
+            </div>
+            <div class="quick-buttons-row">
+              <button type="button" id="btnSetAll343T" class="btn-pill">⭐ Đặt tất cả Tốt (T)</button>
+              <button type="button" id="btnSetAll343H" class="btn-pill">✔ Đặt tất cả Hoàn thành (H)</button>
+              <button type="button" id="btnAutoGenerate343" class="btn btn-warning-action">
+                ⚡ TỰ ĐỘNG SINH NHẬN XÉT IN HỌC BẠ
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Box 3.4.3 -->
+        <div id="previewCard343" class="card hidden">
+          <div class="card-header">
+            <h3>3. Danh sách học sinh (<span id="previewCount343">0</span> em)</h3>
+          </div>
+          <div class="table-preview-container">
+            <table class="preview-table" id="previewTable343">
+              <thead>
+                <tr>
+                  <th style="width: 30px; text-align: center;">STT</th>
+                  <th style="width: 110px;">Họ và tên</th>
+                  <th style="width: 65px; text-align: center;">Mức</th>
+                  <th>Nội dung nhận xét in học bạ của GVCN (Chuẩn TT27)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Action Section 3.4.3 -->
+        <div id="actionSection343" class="action-section-grid hidden">
+          <button id="btnStart343" class="btn btn-primary flex-1">
+            🚀 ĐIỀN TỰ ĐỘNG VÀO TRANG 3.4.3
+          </button>
+          <button id="btnExportExcel343" class="btn btn-success">
+            💾 XUẤT EXCEL
+          </button>
+          <button id="btnStop343" class="btn btn-danger hidden flex-1">
+            ⛔ DỪNG LẠI
+          </button>
+        </div>
+
+        <!-- Progress Box 3.4.3 -->
+        <div id="progressBox343" class="card progress-card hidden">
+          <div class="progress-header">
+            <span id="progressText343">Đang chuẩn bị...</span>
+            <span id="progressPercent343" class="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progressBar343" class="progress-bar-fill" style="width: 0%"></div>
+          </div>
+          <div id="progressLog343" class="progress-log"></div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: KHO MẪU & HƯỚNG DẪN ================= -->
+      <section id="tab-help" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Kiểm tra trang SMIS đang mở</h3>
+          </div>
+          <p class="help-desc">Bấm nút bên dưới để quét trang SMIS hiện tại xem tiện ích đã phát hiện mục 3.4.1, 3.4.2 hay 3.4.3 chưa:</p>
+          <button id="btnCheckPage" class="btn btn-secondary btn-block">🔍 Quét & Kiểm tra trang SMIS</button>
+          <div id="checkPageResult" class="check-result-box hidden"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Quy trình 2 cách sử dụng trên SMIS</h3>
+          </div>
+          <ol class="help-steps">
+            <li><strong>CÁCH 1: XUẤT EXCEL ĐÃ ĐIỀN ĐỂ IMPORT (KHUYÊN DÙNG - CỰC NHANH):</strong>
+              <br>• Trên SMIS, bấm nút <strong>Xuất Excel</strong> ở mục 3.4.1 hoặc 3.4.2.
+              <br>• Tải file vừa xuất vào tiện ích -> Bấm <strong>Tự động sinh nhận xét</strong>.
+              <br>• Bấm nút màu xanh <strong>💾 Xuất Excel (Nhập SMIS)</strong> để tải file về.
+              <br>• Trên SMIS, bấm nút <strong>Nhập Excel</strong> -> Chọn file vừa tải về là xong ngay lập tức!
+            </li>
+            <li><strong>CÁCH 2: ĐIỀN TRỰC TIẾP TRÊN TRANG WEB SMIS:</strong>
+              <br>• Trên SMIS, chọn Khối, Lớp, Môn học rồi bấm <strong>Tìm kiếm / Lấy danh sách</strong>.
+              <br>• Mở tiện ích và bấm <strong>🚀 Bắt đầu điền tự động</strong>. Tiện ích sẽ tự điền từng ô và bấm Lưu.
+            </li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Cam kết bảo mật & An toàn dữ liệu</h3>
+          </div>
+          <p class="help-desc">
+            Tiện ích hoạt động 100% cục bộ trên trình duyệt (Offline Processing). Mọi thông tin học sinh, điểm số, nhận xét được lưu trữ và xử lý trực tiếp trên máy tính của thầy/cô, không truyền gửi bất kỳ dữ liệu nào ra máy chủ bên ngoài.
+          </p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span>SMIS Pro v2.0.0 • Tác giả: Thầy Phương - Trường TH&THCS Ngô Thất Sơn</span>
+    </footer>
+  </div>
+
+  <!-- Nạp các thư viện script -->
+  <script src="libs/xlsx.full.min.js"></script>
+  <script src="utils/matcher.js"></script>
+  <script src="utils/excel.js"></script>
+  <script src="utils/comments-bank.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
