@@ -1,7 +1,8 @@
 # TIỆN ÍCH CHROME EXTENSION: "SMIS PRO – NHẬP NHẬN XÉT HÀNG LOẠT"
 ### Chuẩn Thông tư 27/2020/TT-BGDĐT & Chương trình GDPT 2018
 **Tác giả:** Thầy Phương - Trường TH&THCS Ngô Thất Sơn  
-**Hệ thống hỗ trợ:** Nền tảng số Quản trị Giáo dục Quốc gia SMIS (`smis.moet.edu.vn`, `csdl.moet.gov.vn`, `moet.gov.vn`)
+**Hệ thống hỗ trợ:** Nền tảng số Quản trị Giáo dục Quốc gia SMIS (`smis.moet.edu.vn`, `csdl.moet.gov.vn`, `moet.gov.vn`)  
+**Kho mã nguồn GitHub:** [https://github.com/trungphuongphuongcanva2025-source/tien-ich-danh-gia-smis-tt27](https://github.com/trungphuongphuongcanva2025-source/tien-ich-danh-gia-smis-tt27)
 
 ---
 
@@ -19,12 +20,14 @@ Tiện ích mở rộng **SMIS Pro** (Manifest V3) được thiết kế chuyên
    - Tương thích tuyệt đối với file Excel xuất từ SMIS: `danhgia_nlpc_data_...xlsx`
    - Tự động xử lý bảng 2 tầng header, điền đủ **15 tiêu chí đánh giá** (3 Năng lực chung + 7 Năng lực đặc thù + 5 Phẩm chất chủ yếu) theo các mức Tốt (T) / Đạt (Đ) / Cần cố gắng (C).
    - Tự động sinh **3 nội dung nhận xét chuyên sâu**: Nhận xét Năng lực chung, Nhận xét Năng lực đặc thù, Nhận xét Phẩm chất chủ yếu.
-   - **2 chế độ thực hiện:** Xuất file Excel chuẩn cấu trúc để Import vào SMIS HOẶC Tự động điền trực tiếp trên trang SMIS.
+   - **2 chế độ thực hiện:** Xuất file Excel chuẩn cấu trúc để Import vào SMIS HOẶC Tự động điền trực tiếp trên trang SMIS (tự động nhận diện chính xác từ em số 1 đến em cuối cùng, cuộn bảng ảo đầy đủ 40/40 em).
 
-3. **Mục 3.4.3: Nhập nhận xét in học bạ của GVCN** (`NhapNhanXetHocBa.aspx`)
+3. **Mục 3.4.3: Nhập nhận xét in học bạ của GVCN** (`NhapNhanXetGVCN.aspx` / `NhapNhanXetHocBa.aspx`)
    - Tự động kế thừa danh sách học sinh từ mục 3.4.1 hoặc 3.4.2 (không cần tải lại file).
-   - Tự động sinh nhận xét học bạ tổng quát, giàu tính khích lệ, chuẩn phong cách sư phạm TT27.
-   - Xuất file Excel hoặc điền trực tiếp trên bảng in học bạ của SMIS.
+   - **Bổ sung cột chọn Mức đạt được (T / H / C)** trực tiếp cho từng học sinh.
+   - Nút gán nhanh: `⭐ Đặt tất cả Tốt (T)` và `✔ Đặt tất cả Hoàn thành (H)`.
+   - Nút `⚡ TỰ ĐỘNG SINH NHẬN XÉT IN HỌC BẠ` tự động phân nhóm và xoay vòng nhận xét học bạ theo đúng mức năng lực của từng học sinh, tránh trùng lặp.
+   - Xuất file Excel hoặc điền tự động trực tiếp trên bảng in học bạ của SMIS.
 
 ---
 
@@ -35,14 +38,14 @@ E:\TIỆN ÍCH ĐÁNH GIÁ TRÊN SMIS (TT27)\
 ├── manifest.json              # Khai báo tiện ích Manifest V3, host permissions
 ├── popup.html                 # Giao diện điều khiển 4 tab chuyên biệt (3.4.1, 3.4.2, 3.4.3, HD)
 ├── popup.css                  # Bộ giao diện phong cách sư phạm hiện đại, trực quan
-├── popup.js                   # Logic điều khiển, đọc Excel đa sheet, xoay vòng câu
-├── content.js                 # Script chạy ngầm quét DOM SMIS, tự điền 3 mục và lưu
+├── popup.js                   # Logic điều khiển, đọc Excel đa sheet, xoay vòng câu theo mức
+├── content.js                 # Script chạy ngầm quét DOM SMIS, cuộn bảng ảo, điền form
 ├── background.js              # Service Worker quản lý badge
 ├── libs/
 │   └── xlsx.full.min.js       # Thư viện SheetJS đọc file Excel cực nhanh
 ├── utils/
 │   ├── comments-bank.js       # Ngân hàng 412+ câu nhận xét 5 khối lớp
-│   ├── excel.js               # Bộ giải mã Excel SMIS (fixSheetRange, đa sheet, 15 tiêu chí NL&PC)
+│   ├── excel.js               # Bộ giải mã Excel SMIS (fixSheetRange, đa sheet, 15 tiêu chí, parse 3.4.3)
 │   └── matcher.js             # Thuật toán so khớp học sinh (STT, Mã HS, Họ tên)
 ├── templates/                 # File mẫu tham khảo
 ├── icons/                     # Bộ biểu tượng 16x16, 48x48, 128x128
@@ -73,8 +76,8 @@ E:\TIỆN ÍCH ĐÁNH GIÁ TRÊN SMIS (TT27)\
    - Bấm nút **⭐ Tất cả Tốt (T)** hoặc **✔ Tất cả H.Thành (H)** để gán nhanh mức cả lớp.
    - Bấm **⚡ TỰ ĐỘNG SINH NHẬN XÉT THEO MÔN** (thuật toán tự động sinh câu nhận xét chuyên biệt cho từng em).
 3. **Thực hiện một trong 2 cách:**
-   - **Cách A (Khuyên dùng - Nhanh nhất):** Bấm nút xanh **"📥 XUẤT EXCEL ĐÃ ĐIỀN ĐỦ"** → Quay lại trang SMIS bấm nút **Nhập Excel** rồi chọn file vừa tải về. Toàn bộ điểm, mức đánh giá và nhận xét của cả lớp sẽ được nạp vào SMIS ngay tức khắc!
-   - **Cách B (Điền trực tiếp):** Nhấn nút tím **"🚀 BẮT ĐẦU ĐIỀN TRỰC TIẾP TRÊN TRANG"** → Tiện ích tự điền từng ô trên bảng SMIS.
+   - **Cách A (Khuyên dùng - Nhanh nhất):** Bấm nút xanh **"💾 XUẤT FILE EXCEL ĐÃ ĐIỀN ĐỦ"** → Quay lại trang SMIS bấm nút **Nhập Excel** rồi chọn file vừa tải về. Toàn bộ điểm, mức đánh giá và nhận xét của cả lớp sẽ được nạp vào SMIS ngay tức khắc!
+   - **Cách B (Điền trực tiếp):** Nhấn nút tím **"🚀 ĐIỀN TỰ ĐỘNG VÀO TRANG 3.4.1"** → Tiện ích tự điền từng ô trên bảng SMIS.
 
 ---
 
@@ -85,17 +88,20 @@ E:\TIỆN ÍCH ĐÁNH GIÁ TRÊN SMIS (TT27)\
    - Bấm **⭐ Đặt tất cả Tốt (T)** hoặc **✔ Đặt tất cả Đạt (Đ)** (tiện ích tự gán cả 15 tiêu chí Năng lực và Phẩm chất cho tất cả học sinh).
    - Bấm **⚡ TỰ ĐỘNG SINH 3 NỘI DUNG NHẬN XÉT (TT27)**: Tiện ích tự động tạo 3 câu nhận xét riêng biệt cho từng em (1 câu Năng lực chung, 1 câu Năng lực đặc thù, 1 câu Phẩm chất chủ yếu).
 3. **Thực hiện một trong 2 cách:**
-   - **Cách A (Khuyên dùng):** Bấm **"📥 XUẤT EXCEL ĐÃ ĐIỀN (15 TIÊU CHÍ + 3 NHẬN XÉT)"** → Lên trang SMIS bấm **Nhập Excel** để nạp cả lớp vào hệ thống trong 1 thao tác.
-   - **Cách B:** Bấm **"🚀 BẮT ĐẦU ĐIỀN NĂNG LỰC & PHẨM CHẤT"** để tiện ích tự điền từng hàng trên trang SMIS.
+   - **Cách A (Khuyên dùng):** Bấm **"💾 XUẤT EXCEL (NHẬP SMIS)"** → Lên trang SMIS bấm **Nhập Excel** để nạp cả lớp vào hệ thống trong 1 thao tác.
+   - **Cách B:** Bấm **"🚀 ĐIỀN TỰ ĐỘNG VÀO TRANG 3.4.2"** để tiện ích tự điền từng hàng trên trang SMIS (tự động nhận diện chính xác từ em số 1 và tự cuộn lấy đủ 100% học sinh đến cuối danh sách).
 
 ---
 
 ### 🌟 MỤC 3.4.3: NHẬP NHẬN XÉT IN HỌC BẠ CỦA GVCN
 1. Trên SMIS: Mở mục `3.4.3. Nhập nhận xét in học bạ của GVCN`.
 2. Mở tiện ích **SMIS Pro** → Chọn tab **3.4.3 Nhận xét học bạ**:
-   - Bấm nút **🔄 Dùng danh sách đã có** (để kế thừa ngay danh sách học sinh từ mục 3.4.1/3.4.2 mà không cần tải lại file Excel) hoặc tải file xuất từ mục 3.4.3.
-   - Bấm nút **⚡ TỰ ĐỘNG SINH NHẬN XÉT HỌC BẠ TỔNG QUÁT**.
-   - Bấm **📥 Xuất file Excel** hoặc **🚀 Bắt đầu điền nhận xét học bạ**.
+   - Bấm nút **🔄 Dùng danh sách đã có** (để kế thừa ngay danh sách và mức đánh giá từ mục 3.4.1/3.4.2) hoặc tải file xuất từ mục 3.4.3.
+   - Tùy chỉnh cột **Mức** (T / H / C) cho từng học sinh hoặc bấm `⭐ Đặt tất cả Tốt (T)` / `✔ Đặt tất cả Hoàn thành (H)`.
+   - Bấm nút **⚡ TỰ ĐỘNG SINH NHẬN XÉT IN HỌC BẠ** để sinh câu nhận xét chuẩn mực theo mức năng lực của từng học sinh.
+   - Bấm **💾 XUẤT EXCEL** hoặc **🚀 ĐIỀN TỰ ĐỘNG VÀO TRANG 3.4.3**.
+
+---
 
 ### 💡 LƯU Ý QUAN TRỌNG VỀ CỘT "MÃ NHẬN XÉT":
 - Nhìn vào sheet **HuongDan** trong file mẫu của SMIS: Cột **"Mã nhận xét" KHÔNG có dấu 'x' ở cột Bắt buộc** (chỉ có Mã học sinh, Họ tên, Ngày sinh, Thời điểm đánh giá là bắt buộc).
@@ -107,11 +113,13 @@ E:\TIỆN ÍCH ĐÁNH GIÁ TRÊN SMIS (TT27)\
 
 ---
 
-## 🛠 5. CẨM NANG XỬ LÝ SỰ CỐ NHANH
+## 🛠 5. CÁC ĐỘT PHÁ CÔNG NGHỆ VÀ XỬ LÝ SỰ CỐ
 
-- **Trình duyệt báo không tải được file Excel:**
-  - Tiện ích đã được nâng cấp thuật toán `fixSheetRange`, khắc phục 100% lỗi file xuất từ SMIS bị giới hạn phạm vi bảng (`A1:I1` hoặc `A1:Z2`). Thầy/cô chỉ cần tải lại tiện ích để cập nhật bản mới nhất.
-- **Báo "Chưa mở SMIS" hoặc "Cần F5 lại trang":**
-  - Mở đúng tab SMIS trên trình duyệt (`smis.moet.edu.vn`), nhấn phím **F5** để làm mới trang web, sau đó bấm mở lại tiện ích.
-- **Bảng trên SMIS chưa hiện học sinh khi điền trực tiếp:**
-  - Nhớ chọn Khối, Lớp, Học kỳ trên thanh công cụ SMIS và bấm nút **Tìm kiếm** hoặc **Lấy danh sách** để bảng học sinh xuất hiện trước khi nhấn Bắt đầu điền.
+1. **Khắc phục lỗi file Excel SMIS bị giới hạn phạm vi (`fixSheetRange`):**
+   - Thuật toán tự động tái tính toán biên độ thực của worksheet, giải quyết triệt để tình trạng SheetJS chỉ đọc dòng tiêu đề và bỏ sót học sinh.
+2. **Khắc phục bỏ sót học sinh số 1:**
+   - Bộ lọc thông minh loại trừ hàng công cụ chọn nhanh (batch header row) có nhiều ô `<td>` của SMIS, bảo đảm học sinh số 1 luôn được nhận diện và điền đầy đủ.
+3. **Cơ chế cuộn bảng ảo (Virtual Scroll Handler):**
+   - Tự động cuộn container của SMIS theo chu kỳ để tải đủ 100% học sinh (35-40+ em), không bao giờ bị dừng sớm ở em số 32.
+4. **Báo "Chưa mở SMIS" hoặc "Cần F5 lại trang":**
+   - Mở đúng tab SMIS trên trình duyệt (`smis.moet.edu.vn`), nhấn phím **F5** để làm mới trang web, sau đó bấm mở lại tiện ích.
